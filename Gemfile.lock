@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     omni_notifier (0.1.0)
-      whatsapp_sdk (~> 1.0, >= 1.0.3)
+      whatsapp_sdk
 
 GEM
   remote: https://rubygems.org/

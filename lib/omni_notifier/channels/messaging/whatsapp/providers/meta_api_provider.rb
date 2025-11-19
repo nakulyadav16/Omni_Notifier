@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'whatsapp_sdk'
+require "whatsapp_sdk"
 
 module OmniNotifier
   module Channels
@@ -51,75 +51,75 @@ module OmniNotifier
               handle_generic_error(e)
             end
 
-            def send_image(recipient:, image_url:, caption: nil)
-              image = WhatsappSdk::Resource::Media.new(
-                type: "image",
-                link: image_url,
-                caption: caption
-              )
+            # def send_image(recipient:, image_url:, caption: nil)
+            #   image = WhatsappSdk::Resource::Media.new(
+            #     type: "image",
+            #     link: image_url,
+            #     caption: caption
+            #   )
 
-              response = @messages_api.send_image(
-                sender_id: @config.whatsapp_phone_number_id,
-                recipient_number: format_phone_number(recipient),
-                image: image
-              )
+            #   response = @messages_api.send_image(
+            #     sender_id: @config.whatsapp_phone_number_id,
+            #     recipient_number: format_phone_number(recipient),
+            #     image: image
+            #   )
 
-              parse_response(response)
-            rescue WhatsappSdk::Api::Responses::HttpResponseError => e
-              handle_whatsapp_error(e)
-            rescue StandardError => e
-              handle_generic_error(e)
-            end
+            #   parse_response(response)
+            # rescue WhatsappSdk::Api::Responses::HttpResponseError => e
+            #   handle_whatsapp_error(e)
+            # rescue StandardError => e
+            #   handle_generic_error(e)
+            # end
 
-            def send_document(recipient:, document_url:, filename: nil, caption: nil)
-              document = WhatsappSdk::Resource::Media.new(
-                type: "document",
-                link: document_url,
-                caption: caption,
-                filename: filename
-              )
+            # def send_document(recipient:, document_url:, filename: nil, caption: nil)
+            #   document = WhatsappSdk::Resource::Media.new(
+            #     type: "document",
+            #     link: document_url,
+            #     caption: caption,
+            #     filename: filename
+            #   )
 
-              response = @messages_api.send_document(
-                sender_id: @config.whatsapp_phone_number_id,
-                recipient_number: format_phone_number(recipient),
-                document: document
-              )
+            #   response = @messages_api.send_document(
+            #     sender_id: @config.whatsapp_phone_number_id,
+            #     recipient_number: format_phone_number(recipient),
+            #     document: document
+            #   )
 
-              parse_response(response)
-            rescue WhatsappSdk::Api::Responses::HttpResponseError => e
-              handle_whatsapp_error(e)
-            rescue StandardError => e
-              handle_generic_error(e)
-            end
+            #   parse_response(response)
+            # rescue WhatsappSdk::Api::Responses::HttpResponseError => e
+            #   handle_whatsapp_error(e)
+            # rescue StandardError => e
+            #   handle_generic_error(e)
+            # end
 
-            def send_video(recipient:, video_url:, caption: nil)
-              video = WhatsappSdk::Resource::Media.new(
-                type: "video",
-                link: video_url,
-                caption: caption
-              )
+            # def send_video(recipient:, video_url:, caption: nil)
+            #   video = WhatsappSdk::Resource::Media.new(
+            #     type: "video",
+            #     link: video_url,
+            #     caption: caption
+            #   )
 
-              response = @messages_api.send_video(
-                sender_id: @config.whatsapp_phone_number_id,
-                recipient_number: format_phone_number(recipient),
-                video: video
-              )
+            #   response = @messages_api.send_video(
+            #     sender_id: @config.whatsapp_phone_number_id,
+            #     recipient_number: format_phone_number(recipient),
+            #     video: video
+            #   )
 
-              parse_response(response)
-            rescue WhatsappSdk::Api::Responses::HttpResponseError => e
-              handle_whatsapp_error(e)
-            rescue StandardError => e
-              handle_generic_error(e)
-            end
+            #   parse_response(response)
+            # rescue WhatsappSdk::Api::Responses::HttpResponseError => e
+            #   handle_whatsapp_error(e)
+            # rescue StandardError => e
+            #   handle_generic_error(e)
+            # end
 
             private
 
             def format_phone_number(number)
               # Remove any spaces, dashes, or parentheses
-              cleaned = number.to_s.gsub(/[\s\-\(\)]/, '')
-              
+              cleaned = number.to_s.gsub(/[\s\-()]/, "")
+
               # Add + if not present
-              cleaned.start_with?('+') ? cleaned : "+#{cleaned}"
+              cleaned.start_with?("+") ? cleaned : "+#{cleaned}"
             end
 
             def build_template_components(components)
@@ -170,12 +170,11 @@ module OmniNotifier
             end
 
             def parse_response(response)
-              puts response.inspect
               if response
                 {
                   success: true,
-                  message_id: response.data&.messages&.first&.id,
-                  response: response.data
+                  message_id: response.messages&.first&.id,
+                  response: response
                 }
               else
                 {
