@@ -20,10 +20,6 @@ module OmniNotifier
       channels[channel_sym].send_notification(**params)
     end
 
-    # def whatsapp
-    #   get_channel(:whatsapp)
-    # end
-
     def available_channels
       channels.keys
     end
