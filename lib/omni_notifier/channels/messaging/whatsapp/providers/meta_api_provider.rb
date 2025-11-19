@@ -13,64 +13,55 @@ module OmniNotifier
             def initialize(config)
               @config = config
               @client = WhatsappSdk::Api::Client.new(
-                @config.whatsapp_access_token,
-                @config.whatsapp_api_version
+                config.whatsapp_access_token,
+                config.whatsapp_api_version
               )
-              @messages_api = WhatsappSdk::Api::Messages.new(@client)
+              @messages_api = WhatsappSdk::Api::Messages.new(client)
             end
 
             def send_text(recipient:, message:)
               response = @messages_api.send_text(
-                sender_id: @config.whatsapp_phone_number_id,
-                recipient_number: format_phone_number(recipient),
+                sender_id: sender_id,
+                recipient_number: format_phone(recipient),
                 message: message
               )
-
-              parse_response(response)
-            rescue WhatsappSdk::Api::Responses::HttpResponseError => e
-              handle_whatsapp_error(e)
+              parse_success(response)
             rescue StandardError => e
-              handle_generic_error(e)
+              handle_error(e)
             end
 
             def send_template(recipient:, template_name:, language: "en", components: [])
-              template_components = build_template_components(components)
-
               response = @messages_api.send_template(
-                sender_id: @config.whatsapp_phone_number_id,
-                recipient_number: format_phone_number(recipient),
+                sender_id: sender_id,
+                recipient_number: format_phone(recipient),
                 name: template_name,
                 language: language,
-                components: template_components
+                components: build_components(components)
               )
-
-              parse_response(response)
-            rescue WhatsappSdk::Api::Responses::HttpResponseError => e
-              handle_whatsapp_error(e)
+              parse_success(response)
             rescue StandardError => e
-              handle_generic_error(e)
+              handle_error(e)
             end
+
             private
 
-            def format_phone_number(number)
-              # Remove any spaces, dashes, or parentheses
-              cleaned = number.to_s.gsub(/[\s\-()]/, "")
-
-              # Add + if not present
-              cleaned.start_with?("+") ? cleaned : "+#{cleaned}"
+            def sender_id
+              @config.whatsapp_phone_number_id
             end
 
-            def build_template_components(components)
-              return [] if components.empty?
+            def format_phone(num)
+              s = num.to_s.delete(" ()-")
+              s.start_with?("+") ? s : "+#{s}"
+            end
+
+            def build_components(components)
+              return [] if components.nil? || components.empty?
 
               components.map do |component|
                 case component[:type]
-                when :header
-                  build_header_component(component)
-                when :body
-                  build_body_component(component)
-                when :button
-                  build_button_component(component)
+                when :header then build_header_component(component)
+                when :body   then build_body_component(component)
+                when :button then build_button_component(component)
                 else
                   component
                 end
@@ -107,40 +98,33 @@ module OmniNotifier
               )
             end
 
-            def parse_response(response)
-              if response
-                {
-                  success: true,
-                  message_id: response.messages&.first&.id,
-                  response: response
-                }
+            def parse_success(response)
+              return error_result("Unknown error") unless response
+
+              {
+                success: true,
+                message_id: response.messages&.first&.id,
+                response: response
+              }
+            end
+
+            def error_result(error, type: "Error", klass: nil)
+              {
+                success: false,
+                error: error,
+                error_type: type,
+                error_class: klass
+              }
+            end
+
+            def handle_error(error)
+              case error
+              when WhatsappSdk::Api::Responses::HttpResponseError
+                error_result(error.message, type: "WhatsApp API Error", klass: error.class.name)
               else
-                {
-                  success: false,
-                  error: response.error&.message || "Unknown error",
-                  error_code: response.error&.code,
-                  error_data: response.error
-                }
+                error_result(error.message, type: "Generic Error", klass: error.class.name)
+                  .merge(backtrace: error.backtrace&.first(5))
               end
-            end
-
-            def handle_whatsapp_error(error)
-              {
-                success: false,
-                error: error.message,
-                error_type: "WhatsApp API Error",
-                error_class: error.class.name
-              }
-            end
-
-            def handle_generic_error(error)
-              {
-                success: false,
-                error: error.message,
-                error_type: "Generic Error",
-                error_class: error.class.name,
-                backtrace: error.backtrace&.first(5)
-              }
             end
           end
         end

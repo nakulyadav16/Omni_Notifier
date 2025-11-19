@@ -9,75 +9,53 @@ module OmniNotifier
         class WhatsappChannel < BaseMessengerChannel
           attr_reader :provider
 
+          TEMPLATE_DEFAULT_LANGUAGE = "en"
+
           def initialize(config)
             super(config)
             @provider = initialize_provider
           end
 
           def send_notification(recipient:, message:, **options)
-            validate_params!(recipient: recipient, message: message)
-
-            case options[:type]
-            when :template
-              send_template_message(
-                recipient: recipient,
-                template_name: options[:template_name],
-                language: options[:language] || "en",
-                components: options[:components] || []
-              )
+            if options[:type] == :template
+              send_template_notification(recipient, options)
             else
-              send_text_message(recipient: recipient, message: message)
+              send_text_notification(recipient, message)
             end
           rescue StandardError => e
-            handle_error(e, { recipient: recipient, type: options[:type] })
-          end
-
-          def send_text_message(recipient:, message:)
-            validate_params!(recipient: recipient, message: message)
-
-            result = provider.send_text(
-              recipient: recipient,
-              message: message
-            )
-
-            format_result(result)
-          rescue StandardError => e
-            handle_error(e, { recipient: recipient, message_type: :text })
-          end
-
-          def send_template_message(recipient:, template_name:, language: "en", components: [])
-            validate_template_params!(
-              recipient: recipient,
-              template_name: template_name
-            )
-
-            result = provider.send_template(
-              recipient: recipient,
-              template_name: template_name,
-              language: language,
-              components: components
-            )
-
-            format_result(result)
-          rescue StandardError => e
-            handle_error(e, {
-                           recipient: recipient,
-                           message_type: :template,
-                           template_name: template_name
-                         })
-          end
-
-          def validate_params!(params)
-            raise ArgumentError, "Recipient cannot be blank" if params[:recipient].to_s.strip.empty?
-            raise ArgumentError, "Message cannot be blank" if params[:message].to_s.strip.empty?
-          end
-
-          def validate_template_params!(params)
-            raise ArgumentError, "Recipient cannot be blank" if params[:recipient].to_s.strip.empty?
-            raise ArgumentError, "Template name cannot be blank" if params[:template_name].to_s.strip.empty?
+            handle_error(e, context_for(options, recipient))
           end
 
           private
+
+          def send_text_notification(recipient, message)
+            validate_presence!(recipient: recipient, message: message)
+
+            format_result provider.send_text(
+              recipient: recipient,
+              message: message
+            )
+          end
+
+          def send_template_notification(recipient, options)
+            validate_presence!(
+              recipient: recipient,
+              template_name: options[:template_name]
+            )
+
+            format_result provider.send_template(
+              recipient: recipient,
+              template_name: options[:template_name],
+              language: options[:language] || TEMPLATE_DEFAULT_LANGUAGE,
+              components: options[:components] || []
+            )
+          end
+
+          def validate_presence!(fields)
+            fields.each do |key, value|
+              raise ArgumentError, "#{key.to_s.capitalize} cannot be blank" if value.to_s.strip.empty?
+            end
+          end
 
           def initialize_provider
             raise ConfigurationError, "WhatsApp is not properly configured" unless config.whatsapp_configured?
@@ -87,20 +65,28 @@ module OmniNotifier
 
           def format_result(result)
             if result[:success]
-              success_response(
+              return success_response(
                 message_id: result[:message_id],
                 channel: :whatsapp,
                 provider: :meta_api
               )
-            else
-              {
-                success: false,
-                error: result[:error],
-                error_code: result[:error_code],
-                channel: :whatsapp,
-                provider: :meta_api
-              }
             end
+
+            {
+              success: false,
+              error: result[:error],
+              error_code: result[:error_code],
+              channel: :whatsapp,
+              provider: :meta_api
+            }
+          end
+
+          def context_for(options, recipient)
+            {
+              recipient: recipient,
+              message_type: options[:type],
+              template_name: options[:template_name]
+            }.compact
           end
         end
       end
