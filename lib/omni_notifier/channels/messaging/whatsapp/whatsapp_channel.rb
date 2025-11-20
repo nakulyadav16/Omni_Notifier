@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "providers/meta_api_provider"
-
 module OmniNotifier
   module Channels
     module Messaging
@@ -60,15 +58,28 @@ module OmniNotifier
           def initialize_provider
             raise ConfigurationError, "WhatsApp is not properly configured" unless config.whatsapp_configured?
 
-            Providers::MetaApiProvider.new(config)
+            provider_name = config.whatsapp_provider || :meta_api
+
+            case provider_name.to_sym
+            when :meta_api
+              require_relative "providers/meta_api_provider"
+              Providers::MetaApiProvider.new(config)
+            # when :gupshup
+            #   require_relative "providers/gupshup_provider"
+            #   Providers::GupshupProvider.new(config.to_h)
+            else
+              raise ConfigurationError, "Unknown WhatsApp provider: #{provider_name}"
+            end
           end
 
           def format_result(result)
+            provider_name = config.whatsapp_provider || :meta_api
+
             if result[:success]
               return success_response(
                 message_id: result[:message_id],
                 channel: :whatsapp,
-                provider: :meta_api
+                provider: provider_name
               )
             end
 
@@ -77,7 +88,7 @@ module OmniNotifier
               error: result[:error],
               error_code: result[:error_code],
               channel: :whatsapp,
-              provider: :meta_api
+              provider: provider_name
             }
           end
 
