@@ -9,6 +9,8 @@ require_relative "omni_notifier/notifier"
 
 module OmniNotifier
   class Error < StandardError; end
+  # class DeliveryError < Error; end
+  # class ConfigurationError < Error; end
 
   class << self
     attr_writer :configuration

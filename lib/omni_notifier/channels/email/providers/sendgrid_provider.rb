@@ -17,8 +17,8 @@ module OmniNotifier
           def send_email(to:, subject:, body:, from:, cc: nil, bcc: nil, attachments: nil)
             mail = build_mail(to, subject, body, from, cc, bcc, attachments)
 
-            sg = SendGrid::API.new(api_key: @config[:api_key])
-            response = sg.client.mail._("send").post(request_body: mail.to_json)
+            sg = SendGrid::API.new(api_key: @config[:sendgrid_api_key])
+            sg.client.mail._("send").post(request_body: mail.to_json)
 
             handle_response(response)
           end
@@ -130,7 +130,7 @@ module OmniNotifier
           end
 
           def validate_config!
-            raise ConfigurationError, "SendGrid API key is required" unless @config[:api_key]
+            raise ConfigurationError, "SendGrid API key is required" unless @config[:sendgrid_api_key]
           end
         end
       end

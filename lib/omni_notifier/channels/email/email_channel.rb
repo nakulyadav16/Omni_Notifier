@@ -25,17 +25,11 @@ module OmniNotifier
         private
 
         def setup_provider
-          provider_name = @config[:provider] || :smtp
+          provider_name = @config[:email_provider] || :sendgrid
           provider_class = case provider_name.to_sym
-                           when :smtp
-                             require_relative "providers/smtp_provider"
-                             Providers::SmtpProvider
                            when :sendgrid
                              require_relative "providers/sendgrid_provider"
                              Providers::SendgridProvider
-                           when :mailgun
-                             require_relative "providers/mailgun_provider"
-                             Providers::MailgunProvider
                            else
                              raise ConfigurationError, "Unknown email provider: #{provider_name}"
                            end

@@ -5,19 +5,18 @@ require_relative "lib/omni_notifier/version"
 Gem::Specification.new do |spec|
   spec.name = "omni_notifier"
   spec.version = OmniNotifier::VERSION
-  spec.authors = ["Your Name"]
-  spec.email = ["your.email@example.com"]
+  spec.authors = ["Nakul Yadav"]
+  spec.email = ["nakulyadav16@example.com"]
 
-  spec.summary = "Multi-channel notification gem supporting WhatsApp and Email"
-  spec.description = "A flexible notification system supporting WhatsApp (via SDK) and Email (SMTP/SendGrid)"
-  # spec.homepage = "TODO: Put your gem's website or public repo URL here."
+  spec.summary = "Multi-channel notification gem supporting Email, WhatsApp notifications"
+  spec.description = "A comprehensive notification system supporting multiple channels (Email, WhatsApp with various providers (SendGrid, etc.)"
+  spec.homepage = "https://github.com/nakulyadav16/Omni_Notifier"
   spec.required_ruby_version = ">= 2.6.0"
+  spec.license = "MIT"
 
-  spec.metadata["allowed_push_host"] = "TODO: Set to your gem server 'https://example.com'"
-
-  # spec.metadata["homepage_uri"] = spec.homepage
-  # spec.metadata["source_code_uri"] = "TODO: Put your gem's public repo URL here."
-  # spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
+  spec.metadata["homepage_uri"] = spec.homepage
+  spec.metadata["source_code_uri"] = "https://github.com/nakulyadav16/Omni_Notifier"
+  # spec.metadata["changelog_uri"] = "https://github.com/nakulyadav16/Omni_Notifier/blob/main/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
@@ -30,6 +29,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "json", "~> 2.6"
   spec.add_dependency "sendgrid-ruby", "~> 6.0"
   spec.add_dependency "whatsapp_sdk"
 
