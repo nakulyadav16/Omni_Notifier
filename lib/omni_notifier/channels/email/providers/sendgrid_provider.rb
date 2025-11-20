@@ -18,7 +18,7 @@ module OmniNotifier
             mail = build_mail(to, subject, body, from, cc, bcc, attachments)
 
             sg = SendGrid::API.new(api_key: @config[:sendgrid_api_key])
-            sg.client.mail._("send").post(request_body: mail.to_json)
+            response = sg.client.mail._("send").post(request_body: mail.to_json)
 
             handle_response(response)
           end

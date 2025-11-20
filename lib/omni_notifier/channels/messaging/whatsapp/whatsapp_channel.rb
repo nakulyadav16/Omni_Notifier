@@ -14,7 +14,7 @@ module OmniNotifier
             @provider = initialize_provider
           end
 
-          def send_notification(recipient:, message:, **options)
+          def deliver(recipient:, message:, **options)
             if options[:type] == :template
               send_template_notification(recipient, options)
             else

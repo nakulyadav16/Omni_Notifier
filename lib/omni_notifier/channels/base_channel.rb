@@ -9,8 +9,8 @@ module OmniNotifier
         @config = config
       end
 
-      def send_notification(recipient:, message:, **options)
-        raise NotImplementedError, "#{self.class} must implement #send_notification"
+      def deliver(recipient:, message:, **options)
+        raise NotImplementedError, "#{self.class} must implement #deliver"
       end
 
       def validate_params!(params)

@@ -2,32 +2,39 @@
 
 module OmniNotifier
   class ChannelManager
+    class ChannelNotEnabledError < StandardError; end
+    class ChannelNotSupportedError < StandardError; end
+
     attr_reader :config, :channels
+
+    # CHANNEL REGISTRY:
+    # Each entry defines: class_path, class_name
+    CHANNEL_REGISTRY = {
+      whatsapp: {
+        file: "channels/messaging/whatsapp/whatsapp_channel",
+        class: "Channels::Messaging::Whatsapp::WhatsappChannel",
+      },
+      email: {
+        file: "channels/email/email_channel",
+        class: "Channels::Email::EmailChannel",
+      }
+      # ➕ Add more channels here:
+      # sms: { file: "...", class: "...", send_method: :deliver }
+    }.freeze
 
     def initialize(config)
       @config = config
       @channels = {}
-      initialize_channels
+      initialize_enabled_channels
     end
 
     def send(channel:, **params)
-      channel_sym = channel.to_sym
+      channel = channel.to_sym
+      channel_instance = channels[channel]
 
-      unless channels.key?(channel_sym)
-        raise ChannelNotEnabledError, "Channel '#{channel}' is not enabled or not supported"
-      end
+      raise ChannelNotEnabledError, "Channel '#{channel}' is not enabled" unless channel_instance
 
-      channel_instance = channels[channel_sym]
-
-      # Different channels have different method names
-      case channel_sym
-      when :whatsapp
-        channel_instance.send_notification(**params)
-      when :email, :sms, :telegram, :signal, :push, :voice, :in_app
-        channel_instance.deliver(params)
-      else
-        raise ChannelNotEnabledError, "Unknown channel delivery method for '#{channel}'"
-      end
+      channel_instance.deliver(**params)
     end
 
     def available_channels
@@ -40,34 +47,23 @@ module OmniNotifier
 
     private
 
-    def initialize_channels
+    def initialize_enabled_channels
       config.enabled_channels.each do |channel|
-        case channel.to_sym
-        when :whatsapp
-          initialize_whatsapp if config.whatsapp_configured?
-        when :email
-          initialize_email if config.email_configured?
-        end
+        channel = channel.to_sym
+
+        spec = CHANNEL_REGISTRY[channel]
+        raise ChannelNotSupportedError, "Channel '#{channel}' is not supported" unless spec
+
+        next unless config.channel_configured?(channel)
+
+        channels[channel] = build_channel(spec)
       end
     end
 
-    def initialize_whatsapp
-      require_relative "channels/messaging/whatsapp/whatsapp_channel"
-      @channels[:whatsapp] = Channels::Messaging::Whatsapp::WhatsappChannel.new(config)
-    end
-
-    def initialize_email
-      require_relative "channels/email/email_channel"
-      @channels[:email] = Channels::Email::EmailChannel.new(config.to_h)
-    end
-
-    def get_channel(channel_name)
-      channel = channels[channel_name.to_sym]
-      raise ChannelNotEnabledError, "Channel '#{channel_name}' is not enabled" unless channel
-
-      channel
+    def build_channel(spec)
+      require_relative spec[:file]
+      klass = OmniNotifier.const_get(spec[:class])
+      klass.new(config.to_h)
     end
   end
-
-  class ChannelNotEnabledError < StandardError; end
 end
