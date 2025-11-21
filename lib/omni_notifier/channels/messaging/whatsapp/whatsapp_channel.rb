@@ -56,9 +56,7 @@ module OmniNotifier
           end
 
           def initialize_provider
-            raise ConfigurationError, "WhatsApp is not properly configured" unless config.whatsapp_configured?
-
-            provider_name = config.whatsapp_provider || :meta_api
+            provider_name = config[:whatsapp_provider] || :meta_api
 
             case provider_name.to_sym
             when :meta_api
@@ -73,7 +71,7 @@ module OmniNotifier
           end
 
           def format_result(result)
-            provider_name = config.whatsapp_provider || :meta_api
+            provider_name = config[:whatsapp_provider] || :meta_api
 
             if result[:success]
               return success_response(

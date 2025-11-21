@@ -13,8 +13,8 @@ module OmniNotifier
             def initialize(config)
               @config = config
               @client = WhatsappSdk::Api::Client.new(
-                config.whatsapp_access_token,
-                config.whatsapp_api_version
+                config[:whatsapp_access_token],
+                config[:whatsapp_api_version]
               )
               @messages_api = WhatsappSdk::Api::Messages.new(client)
             end
@@ -46,7 +46,7 @@ module OmniNotifier
             private
 
             def sender_id
-              @config.whatsapp_phone_number_id
+              @config[:whatsapp_phone_number_id]
             end
 
             def format_phone(num)
