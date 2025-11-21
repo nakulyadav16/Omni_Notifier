@@ -37,10 +37,6 @@ module OmniNotifier
       channel_instance.deliver(**params)
     end
 
-    def available_channels
-      channels.keys
-    end
-
     def channel_enabled?(channel)
       channels.key?(channel.to_sym)
     end

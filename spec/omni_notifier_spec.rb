@@ -5,7 +5,15 @@ RSpec.describe OmniNotifier do
     expect(OmniNotifier::VERSION).not_to be nil
   end
 
-  it "does something useful" do
-    expect(false).to eq(true)
+  describe ".configure" do
+    after { OmniNotifier.reset_configuration! }
+
+    it "yields configuration" do
+      OmniNotifier.configure do |config|
+        config.enabled_channels = [:email]
+        config.sendgrid_api_key = "test"
+      end
+      expect(OmniNotifier.configuration.enabled_channels).to eq([:email])
+    end
   end
 end

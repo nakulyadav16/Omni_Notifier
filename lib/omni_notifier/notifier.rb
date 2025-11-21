@@ -14,9 +14,6 @@ module OmniNotifier
     end
 
     # Check available channels
-    def available_channels
-      channel_manager.available_channels
-    end
 
     # Check if a channel is enabled
     def channel_enabled?(channel)
